@@ -156,6 +156,65 @@ npm run build
 ```bash 
 npm install axios
 ```
+PS1: IPL Analysis Usage
+Navigate to the PS1 directory:
 
+bash
+Copy
+Edit
+cd ps1
+Download the IPL dataset:
+
+bash
+Copy
+Edit
+# Download from the provided link in the problem statement
+# Place the matches.csv and deliveries.csv files in the data/ directory
+Run the analysis notebook:
+
+bash
+Copy
+Edit
+jupyter notebook notebooks/ipl_analysis.ipynb
+For prediction model:
+
+bash
+Copy
+Edit
+jupyter notebook notebooks/ipl_prediction.ipynb
+PS2: Paper Summarization Usage
+Navigate to the PS2 directory:
+
+bash
+Copy
+Edit
+cd ps2
+Download and prepare datasets:
+
+bash
+Copy
+Edit
+# For ArXiv and PubMed datasets
+python scripts/download_datasets.py
+
+# For CompScholar dataset (if available)
+# Place the dataset in the data/ directory
+Run the summarization notebook:
+
+bash
+Copy
+Edit
+jupyter notebook notebooks/paper_summarization.ipynb
+Generate summaries for new papers:
+
+python
+Copy
+Edit
+from models.summarizer import generate_summary
+
+# Example usage
+paper_text = "..."
+summary = generate_summary(paper_text)
+print(summary)
  
 
