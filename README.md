@@ -41,3 +41,58 @@ This README provides an overview of the project, including team details, relevan
 - **Source Code:** [GitHub Repository](https://github.com/codebreaker32/SIH_INTERNAL_ROUND_1_ERROR_404_CHANGE_FOUND)
 
 
+
+## How it works
+
+The repo is a Django REST backend plus a React frontend (both under `code/`), with the ML experiments that produced the diabetes model in `code/ml/`.
+
+```mermaid
+flowchart LR
+  UI["React frontend (code/src: selectRole, login, doctordash, patientdash)"] -->|"axios /api/user/..."| API["Django REST API (Rest_APIs/urls.py)"]
+  API --> JWT["SimpleJWT login and register, role = patient or doctor"]
+  API -->|"doctor uploads report image"| OCR["utils.extract_patient_details_from_image (OpenCV preprocessing + Tesseract)"]
+  OCR --> DB["SQLite: MyUser, DiabetesData"]
+  API -->|"new patient record"| XGB["utils.ml_generate_outcome (diabetes_xgb.pkl)"]
+  XGB --> DB
+  DB -->|"latest record"| REC["utils2.generate_recommendation (XGBoost probability + Gemini Pro text)"]
+  REC -->|"recommendation, outcome, proba_diabetic"| UI
+  ML["code/ml notebooks and scripts (EDA, training, SHAP explanations)"] -.->|"exported model"| XGB
+```
+
+Endpoints defined in `code/Rest_APIs/urls.py` (all under `/api/user/`): `register/`, `login/`, `profile/`, `changepassword/`, `logout/`, `get-diabetes-data/`, `doctor/patients/`, `patients/`, `patients/<username>/`.
+
+## Project structure
+
+```
+code/
+  HealthCare_BACKEND/   Django project (settings, urls, requirements.txt)
+  Rest_APIs/            custom user model, JWT views, serializers, utils.py (OCR + XGBoost), utils2.py (Gemini recommendation), diabetes_xgb.pkl
+  Data_user/            DiabetesData model and migrations
+  ml/                   diabetes.csv, EDA and model notebooks, explainable_ai.py (SHAP), recommend_using_geminipro.py, image_generation_fromcsv.py
+  src/, public/         React app (package.json name: medical-portal; react-router-dom, axios, chart.js)
+  manage.py, db.sqlite3
+  README.md             detailed backend and frontend setup notes
+```
+
+## Getting started
+
+Full step-by-step instructions (Windows and macOS) are in [`code/README.md`](code/README.md). In short:
+
+```bash
+cd code
+pip install -r HealthCare_BACKEND/requirements.txt
+python manage.py migrate
+python manage.py runserver        # API on http://127.0.0.1:8000
+
+npm install && npm start          # React dev server, from the same code/ folder
+```
+
+You also need a local Tesseract install (the path is set in `Rest_APIs/utils.py`) and a Gemini API key (set in `Rest_APIs/utils2.py`).
+
+## Status and limitations
+
+- Hackathon (SIH) prototype; no automated tests beyond the Django/React defaults.
+- The Tesseract executable path is hard-coded to a Windows location in `Rest_APIs/utils.py`; the Gemini API key in `utils2.py` is an empty string and must be filled in.
+- `patientdash.js` calls `/api/patient/`, `/api/analytics/` and `/api/recommendations/`, which are not defined in `Rest_APIs/urls.py` (the code comments mark them as placeholders); the doctor dashboard and login use the real endpoints.
+- The `code/ml/` scripts read local CSVs (`diabetes_outcome.csv`, `patient_details.csv`) by relative path and are run standalone, not from the API.
+- `node_modules/` and `db.sqlite3` are committed to the repository.
